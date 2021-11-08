@@ -8,6 +8,6 @@ RUN mkdir /data
 RUN chmod 700 -R /data && chown -R 1001 /data
 
 USER 1001
-ENTRYPOINT [ "npm", "start", "--cache", "/data/.npm", "--", "--userDir", "/data" ]
+ENTRYPOINT [ "npm", "start", "--cache", "/data/.npm", "--", "--userDir", "/data", "/data/flows.json" ]
 
 
