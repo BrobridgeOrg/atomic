@@ -8,6 +8,7 @@ RUN mkdir /data
 RUN chmod 700 -R /data && chown -R 1001 /data
 
 USER 1001
+ENV NODE_PATH /data/node_modules
 ENTRYPOINT [ "npm", "start", "--cache", "/data/.npm", "--", "--userDir", "/data", "/data/flows.json" ]
 
 
