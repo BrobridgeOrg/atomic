@@ -6,7 +6,7 @@ services:
 
 variables:
   CI_REGISTRY: hb.k8sbridge.com
-  CI_REGISTRY_USER: robot$atomic-ci
+  CI_REGISTRY_USER: robot\$atomic-ci
   CI_REGISTRY_PASSWORD: $REGISTRY_KEY
   PROJECT_ID: atomic
   IMAGE_NAME: atomic
