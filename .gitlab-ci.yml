@@ -21,7 +21,6 @@ stages:
 docker-build:
   stage: build
   before_script:
-    - echo "$DOCKER_AUTH_CONFIG" > ~/.docker/config.json
     - echo "$DOCKER_AUTH_CONFIG" > ${GITLAB_RUNNER_HOME}/.docker/config.json
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin  $CI_REGISTRY
   script:
