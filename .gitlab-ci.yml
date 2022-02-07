@@ -5,6 +5,7 @@ services:
   - docker:dind
 
 variables:
+  DOCKER_TLS_CERTDIR: ""
   CI_REGISTRY: hb.k8sbridge.com
   CI_REGISTRY_USER: robot\$atomic-ci
   CI_REGISTRY_PASSWORD: $REGISTRY_KEY
