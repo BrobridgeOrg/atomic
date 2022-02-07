@@ -5,7 +5,7 @@ services:
   - docker:dind
 
 variables:
-  CI_REGISTRY: 192.168.1.169
+  CI_REGISTRY: hb.k8sbridge.com
   CI_REGISTRY_USER: robot$atomic-ci
   CI_REGISTRY_PASSWORD: $REGISTRY_KEY
   PROJECT_ID: atomic
@@ -29,7 +29,6 @@ docker-build:
     - docker push "$CI_REGISTRY_IMAGE${tag}"
   # Run this job in a branch where a Dockerfile and tag are exists.
   only:
-  - master
   - tags
 
 #test-stage:
@@ -47,7 +46,6 @@ deploy-stage:
   stage: deploy
   image: alpine:3.15
   only:
-  - master
   - tags
   script:
   - |
