@@ -1,13 +1,15 @@
 # Use the official docker image.
 image: docker:latest
 
-services:
-  - docker:dind
+services: 
+  - name: docker:19.03.12-dind
+    command: ["--insecure-registry=hb.k8sbridge.com"]
 
 variables:
+  DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ""
   CI_REGISTRY: hb.k8sbridge.com
-  CI_REGISTRY_USER: robot\$atomic-ci
+  CI_REGISTRY_USER: robot$$atomic-ci
   CI_REGISTRY_PASSWORD: $REGISTRY_KEY
   PROJECT_ID: atomic
   IMAGE_NAME: atomic
@@ -21,18 +23,22 @@ stages:
 docker-build:
   stage: build
   before_script:
-    - mkdir -p  ~/.docker
-    - echo "$DOCKER_AUTH_CONFIG" > ~/.docker/config.json
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin  $CI_REGISTRY
   script:
     - |
-      tag="$CI_COMMIT_TAG"
+
+      tag="dev"
+      if [[ "$CI_COMMIT_TAG" != '' ]]; then
+        tag="$CI_COMMIT_TAG"
+      fi
       echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
-    - docker build -t "$CI_REGISTRY_IMAGE${tag}" ./build/docker/Dockerfile .
-    - docker push "$CI_REGISTRY_IMAGE${tag}"
+    - echo docker build -t "$CI_REGISTRY_IMAGE:${tag}" -f ./build/docker/Dockerfile .
+    - docker build -t "$CI_REGISTRY_IMAGE:${tag}" -f ./build/docker/Dockerfile .
+    - docker push "$CI_REGISTRY_IMAGE:${tag}"
   # Run this job in a branch where a Dockerfile and tag are exists.
   only:
   - tags
+  - branches
 
 #test-stage:
 #  stage: test
@@ -45,6 +51,7 @@ docker-build:
 #    - docker pull "$CI_REGISTRY_IMAGE${tag}"
 #    - docker run "$CI_REGISTRY_IMAGE${tag}" echo "Run test in here ... "
 #
+
 deploy-stage:
   stage: deploy
   image: alpine:3.15
