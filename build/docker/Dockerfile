@@ -1,4 +1,4 @@
-FROM node:16-alpine3.15
+FROM node:16-alpine3.17
 #FROM node:16-buster-slim
 WORKDIR /atomic
 COPY . .
@@ -9,9 +9,10 @@ RUN apk update && apk upgrade --available && apk add --no-cache git build-base
 #RUN rm -rf ./package-lock.json ./node_modules
 #RUN npm install -g npm-check-updates && ncu -u && npm update
 #RUN npm install && npm audit fix && npm run build 
-#RUN npm install && npm run build 
+RUN npm install  body-parser@1.20.2 express@4.18.2 qs@6.5.3 minimatch@3.0.5 #&& npm install qs@6.7.3
+
 RUN mkdir -p /data/atomic
-RUN chmod 700 -R /data && chown -R 1001 /data
+RUN chmod 770 -R /data && chown -R 1001:0 /data
 RUN mv ./gitconfig /.gitconfig
 RUN rm -rf ./build  ./packages/node_modules/@node-red/editor-client/src
 
