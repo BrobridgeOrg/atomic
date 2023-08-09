@@ -1,0 +1,52 @@
+FROM node:16-alpine3.17
+WORKDIR /atomic
+COPY . .
+
+RUN apk update && apk upgrade --available && apk add --no-cache git build-base unzip libc6-compat #python3 #libaio libnsl libc6-compat 
+
+RUN npm install -g npm@9.8.1
+RUN apk --no-cache add libaio libnsl curl && \
+    cd /tmp && \
+    curl -o instantclient-basiclite.zip https://download.oracle.com/otn_software/linux/instantclient/instantclient-basiclite-linuxx64.zip -SL && \
+    unzip instantclient-basiclite.zip && \
+    mv instantclient*/ /usr/lib/instantclient && \
+    rm instantclient-basiclite.zip && \
+    ln -s /usr/lib/instantclient/libclntsh.so.21.1 /usr/lib/libclntsh.so && \
+    ln -s /usr/lib/instantclient/libocci.so.21.1 /usr/lib/libocci.so && \
+    ln -s /usr/lib/instantclient/libociicus.so /usr/lib/libociicus.so && \
+    ln -s /usr/lib/instantclient/libnnz21.so /usr/lib/libnnz21.so && \
+    ln -s /usr/lib/libnsl.so.2 /usr/lib/libnsl.so.1 && \
+    ln -s /lib/libc.so.6 /usr/lib/libresolv.so.2 && \
+    ln -s /lib64/ld-linux-x86-64.so.2 /usr/lib/ld-linux-x86-64.so.2 
+
+ENV LD_LIBRARY_PATH=/usr/lib/instantclient
+
+## fix cve
+RUN npm install node-red-contrib-oracledb-mod@0.6.3 body-parser@1.20.2 express@4.18.2 qs@6.5.3 minimatch@3.0.5
+
+## fix DeprecationWarning: Invalid 'main' field and other bug
+RUN cd /atomic/ && \
+	cp build/docker/oracledb.js /atomic/node_modules/node-red-contrib-oracledb-mod/lib/ && \
+	sed -i 's/main/_main/g' packages/node_modules/@node-red/editor-client/package.json && \
+	cd /atomic/node_modules/node-red-contrib-oracledb-mod && \
+	grep -r 'placeholder="/path/to/instantclient"' ./* | awk -F':' '{print $1 }' | xargs sed -i 's/placeholder="\/path\/to\/instantclient"/placeholder="\/usr\/lib\/instantclient"/g' && \
+	grep -r 'instantclientpath: { value: "" }' ./* | awk -F':' '{print $1 }' | xargs sed -i 's/instantclientpath: { value: "" }/instantclientpath: { value: "\/usr\/lib\/instantclient" }/g' && \
+	grep -r 'background: #fff' ./* | awk -F':' '{print $1 }' | xargs sed -i 's/background: #fff//g'
+	#sed -i 's/requestingNode.error("Oracle query error: " + err.message + ", errorCode:" + errorCode);/requestingNode.error("Oracle query error: " + err.message + ", errorCode:" + errorCode, msg);/g' ./lib/oracledb.js && \
+	#sed -i 's/requestingNode.log("Oracle query no result rows sent");/requestingNode.send(msg);/g' ./lib/oracledb.js
+
+
+
+
+RUN mkdir -p /data/atomic
+RUN chmod 770 -R /data && chown -R 1001:0 /data
+RUN mv ./gitconfig /.gitconfig
+RUN rm -rf ./build  ./packages/node_modules/@node-red/editor-client/src
+
+
+USER 1001
+ENV NODE_PATH /data/atomic/node_modules
+#ENV NODE_RED_ENABLE_PROJECTS=true
+ENV ATOMIC_PUBLISH_COMMAND='cd /data/atomic && git add . && git commit -m "updated by atomic" && git push'
+ENTRYPOINT [ "npm", "start", "--cache", "/data/atomic/.npm", "--", "--userDir", "/data/atomic", "/data/atomic/flows.json" ]
+
