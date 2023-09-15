@@ -1,28 +1,29 @@
-FROM node:16-alpine3.17
+FROM node:16-buster-slim
 WORKDIR /atomic
 COPY . .
 
-RUN apk update && apk upgrade --available && apk add --no-cache git build-base unzip libc6-compat #python3 #libaio libnsl libc6-compat 
+RUN apt-get update && apt-get upgrade -y && apt-get -y install unzip git build-essential unzip python3 libxml2  #libc6-compat python3 #libaio libnsl libc6-compat 
 
 RUN npm install -g npm@9.8.1
-RUN apk --no-cache add libaio libnsl curl && \
+RUN apt-get install -y libaio1 curl && \
     cd /tmp && \
-    curl -o instantclient-basiclite.zip https://download.oracle.com/otn_software/linux/instantclient/instantclient-basiclite-linuxx64.zip -SL && \
+    curl -o instantclient-basiclite.zip https://download.oracle.com/otn_software/linux/instantclient/instantclient-basic-linuxx64.zip -SL && \
     unzip instantclient-basiclite.zip && \
     mv instantclient*/ /usr/lib/instantclient && \
-    rm instantclient-basiclite.zip && \
-    ln -s /usr/lib/instantclient/libclntsh.so.21.1 /usr/lib/libclntsh.so && \
-    ln -s /usr/lib/instantclient/libocci.so.21.1 /usr/lib/libocci.so && \
-    ln -s /usr/lib/instantclient/libociicus.so /usr/lib/libociicus.so && \
-    ln -s /usr/lib/instantclient/libnnz21.so /usr/lib/libnnz21.so && \
-    ln -s /usr/lib/libnsl.so.2 /usr/lib/libnsl.so.1 && \
-    ln -s /lib/libc.so.6 /usr/lib/libresolv.so.2 && \
-    ln -s /lib64/ld-linux-x86-64.so.2 /usr/lib/ld-linux-x86-64.so.2 
+    rm instantclient-basiclite.zip  && \
+    ln -s /usr/lib/instantclient/* /usr/lib
 
 ENV LD_LIBRARY_PATH=/usr/lib/instantclient
 
-## fix cve
-RUN npm install node-red-contrib-oracledb-mod@0.6.3 body-parser@1.20.2 express@4.18.2 qs@6.5.3 minimatch@3.0.5
+## fix cve and atomic common module
+RUN npm install body-parser@1.20.2 express@4.18.2 qs@6.5.3 minimatch@3.0.5 \
+	atomic-mssql \
+	atomic-jetstream \
+	atomic-gravity \
+	atomic-org/lru-cache \
+	node-red-contrib-cron-plus \
+	node-red-contrib-oracledb-mod@0.6.3 \
+	atomic-informix 
 
 ## fix DeprecationWarning: Invalid 'main' field and other bug
 RUN cd /atomic/ && \
@@ -39,8 +40,8 @@ RUN cd /atomic/ && \
 
 
 RUN mkdir -p /data/atomic
-RUN chmod 770 -R /data && chown -R 1001:0 /data
-RUN mv ./gitconfig /.gitconfig
+RUN chmod -R g+rwX /data && chown -R 1001:0 /data
+RUN mv ./gitconfig /.gitconfig && cp /.gitconfig ~
 RUN rm -rf ./build  ./packages/node_modules/@node-red/editor-client/src
 
 
