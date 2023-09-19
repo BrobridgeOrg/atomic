@@ -1,18 +1,22 @@
 #FROM node:16-buster-slim
-FROM node:16-bookworm-slim
+#FROM node:16-bookworm-slim
+FROM registry.access.redhat.com/ubi8/nodejs-16:1-118.1692780867
 WORKDIR /atomic
 COPY . .
 
-RUN apt-get update && apt-get upgrade -y && apt-get -y install unzip git build-essential unzip python3 libxml2  #libc6-compat python3 #libaio libnsl libc6-compat 
+USER root
+
+RUN yum update -y #&& yum -y install build-essential curl  python3 libxml2  #libc6-compat python3 #libaio libnsl libc6-compat 
 
 RUN npm install -g npm@9.8.1
-RUN apt-get install -y libaio1 curl && \
-    cd /tmp && \
-    curl -o instantclient-basiclite.zip https://download.oracle.com/otn_software/linux/instantclient/instantclient-basic-linuxx64.zip -SL && \
-    unzip instantclient-basiclite.zip && \
-    mv instantclient*/ /usr/lib/instantclient && \
-    rm instantclient-basiclite.zip  && \
-    ln -s /usr/lib/instantclient/* /usr/lib
+RUN yum update -y && \
+	yum install -y libaio && \
+	cd /tmp && \
+	curl -o instantclient-basic.zip https://download.oracle.com/otn_software/linux/instantclient/instantclient-basic-linuxx64.zip -SL && \
+	unzip instantclient-basic.zip && \
+	mv instantclient*/ /usr/lib/instantclient && \
+	rm instantclient*.zip  && \
+	ln -s /usr/lib/instantclient/* /usr/lib
 
 ENV LD_LIBRARY_PATH=/usr/lib/instantclient
 
@@ -35,8 +39,6 @@ RUN cd /atomic/ && \
 	grep -r 'placeholder="/path/to/instantclient"' ./* | awk -F':' '{print $1 }' | xargs sed -i 's/placeholder="\/path\/to\/instantclient"/placeholder="\/usr\/lib\/instantclient"/g' && \
 	grep -r 'instantclientpath: { value: "" }' ./* | awk -F':' '{print $1 }' | xargs sed -i 's/instantclientpath: { value: "" }/instantclientpath: { value: "\/usr\/lib\/instantclient" }/g' && \
 	grep -r 'background: #fff' ./* | awk -F':' '{print $1 }' | xargs sed -i 's/background: #fff//g'
-	#sed -i 's/requestingNode.error("Oracle query error: " + err.message + ", errorCode:" + errorCode);/requestingNode.error("Oracle query error: " + err.message + ", errorCode:" + errorCode, msg);/g' ./lib/oracledb.js && \
-	#sed -i 's/requestingNode.log("Oracle query no result rows sent");/requestingNode.send(msg);/g' ./lib/oracledb.js
 
 
 
