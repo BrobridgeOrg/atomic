@@ -9,11 +9,7 @@ build-docker-brosync-jobmgr-base:
     ARG EARTHLY_GIT_HASH
     LABEL org.opencontainers.image.source=https://github.com/BrobridgeOrg/atomic
     WORKDIR /atomic
-    COPY --dir packages .
-    COPY --dir build .
-    COPY package.json .
-    COPY Gruntfile.js .
-    COPY gitconfig .
+    COPY --dir packages build package.json Gruntfile.js gitconfig ./
     ENV TZ Asia/Taipei
     RUN apk update && apk upgrade --available \
         && apk add --no-cache ca-certificates git build-base tzdata bash \
@@ -27,7 +23,7 @@ build-docker-brosync-jobmgr-base:
         && mkdir -p /data/atomic \
         && chmod 770 -R /data && chown -R app:0 /data \
         && rm -rf build packages/node_modules/@node-red/editor-client/src \
-        && apk del git build-base \
+        && apk del build-base \
         && rm -rf /var/cache/apk/* \
         && echo -e "time: $(date +'%Y-%m-%d %H:%M:%S')\ngit: ${EARTHLY_GIT_HASH}" > /atomic/BUILD_INFO 
     USER app
