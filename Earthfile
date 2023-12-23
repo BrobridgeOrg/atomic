@@ -12,7 +12,7 @@ build-docker-brosync-jobmgr-base:
     COPY --dir packages build package.json Gruntfile.js gitconfig ./
     ENV TZ Asia/Taipei
     RUN apk update && apk upgrade --available \
-        && apk add --no-cache ca-certificates git build-base tzdata bash \
+        && apk add --no-cache ca-certificates git build-base tzdata bash curl \
         && npm install body-parser@1.20.2 express@4.18.2 qs@6.5.3 minimatch@3.0.5 \
         && npm install atomic-jetstream@0.0.17 \
         && npm run build \
