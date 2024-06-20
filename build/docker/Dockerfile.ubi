@@ -39,6 +39,7 @@ RUN npm update && npm install body-parser@1.20.2 express@4.18.2 qs@6.5.3 minimat
 
 
 ## fix DeprecationWarning: Invalid 'main' field and other bug
+RUN ls -l /atomic/packages/node_modules/@node-red/editor-client/public/red/images/
 RUN cd /atomic/ && \
 	cp build/docker/settings.js /atomic/packages/node_modules/node-red/settings.js && \
 	cp build/docker/atomic-logo.png /atomic/packages/node_modules/@node-red/editor-client/public/red/images/node-red-256.png && \
