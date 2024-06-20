@@ -34,7 +34,8 @@ jobs:
           #type=ref,event=tag
           #type=semver,pattern={{raw}}
           #type=sha,prefix=
-          type=raw,value=v0.0.5-{{date 'YYYYMMDD'}}
+          type=raw,value=v0.0.5-{{date 'YYYYMMDD'}}-ubi
+          latest
 
     - name: Build and push Docker image
       uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
