@@ -93,6 +93,5 @@ jobs:
       with:
         args: |
           The project {{ EVENT_PAYLOAD.repository.full_name }} has been builded.
-          image: **${{ needs.build-and-push-image.outputs.tags }}**
-          scan-report
-          ${{ needs.scan-image.outputs.trivy_report }}
+          scan-report: ```{{ needs.scan-image.outputs.trivy_report }}```
+          image: **{{ needs.build-and-push-image.outputs.tags }}**
