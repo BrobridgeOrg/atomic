@@ -65,6 +65,10 @@ jobs:
       id: set-image-name
       run: echo "LOWERCASE_IMAGE_NAME=${{ env.REGISTRY }}/$(echo ${{ env.IMAGE_NAME }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
+    - name: Pull Image
+      run: |
+        docker pull ${{ env.LOWERCASE_IMAGE_NAME }}:latest
+
     - name: Scan Docker image with Trivy
       uses: aquasecurity/trivy-action@master
       with:
