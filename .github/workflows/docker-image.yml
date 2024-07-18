@@ -73,13 +73,20 @@ jobs:
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: ${{ env.LOWERCASE_IMAGE_NAME }}:latest
+        scan-type: image
         format: 'table'
         output: 'trivy-report.txt'
 
-    - name: Upload Trivy report
-      id: upload-trivy-report
+    - name: Parse Trivy report
+      id: parse-trivy-report
       run: |
-        report=$(cat trivy-report.txt)
+        total=$(grep "Total:" trivy-report.txt | awk '{print $2}')
+        unknown=$(grep "UNKNOWN:" trivy-report.txt | awk '{print $2}')
+        low=$(grep "LOW:" trivy-report.txt | awk '{print $2}')
+        medium=$(grep "MEDIUM:" trivy-report.txt | awk '{print $2}')
+        high=$(grep "HIGH:" trivy-report.txt | awk '{print $2}')
+        critical=$(grep "CRITICAL:" trivy-report.txt | awk '{print $2}')
+        report="Total: $total (UNKNOWN: $unknown, LOW: $low, MEDIUM: $medium, HIGH: $high, CRITICAL: $critical)"
         echo "::set-output name=trivy_report::$report"
 
   notification-discord:
@@ -93,5 +100,5 @@ jobs:
       with:
         args: |
           The project {{ EVENT_PAYLOAD.repository.full_name }} has been builded.
-          scan-report: ```{{ needs.scan-image.outputs.trivy_report }}```
-          image: **{{ needs.build-and-push-image.outputs.tags }}**
+          Image: **${{ needs.build-and-push-image.outputs.tags }}**
+          Scan report: **${{ needs.scan-image.outputs.trivy_report }}**
