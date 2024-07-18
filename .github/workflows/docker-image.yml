@@ -80,14 +80,7 @@ jobs:
     - name: Parse Trivy report
       id: parse-trivy-report
       run: |
-#        total=$(grep "Total:" trivy-report.txt | awk '{print $2}')
-#        unknown=$(grep "UNKNOWN:" trivy-report.txt | awk '{print $2}')
-#        low=$(grep "LOW:" trivy-report.txt | awk '{print $2}')
-#        medium=$(grep "MEDIUM:" trivy-report.txt | awk '{print $2}')
-#        high=$(grep "HIGH:" trivy-report.txt | awk '{print $2}')
-#        critical=$(grep "CRITICAL:" trivy-report.txt | awk '{print $2}')
-#        report="Total: $total (UNKNOWN: $unknown, LOW: $low, MEDIUM: $medium, HIGH: $high, CRITICAL: $critical)"
-        report=$(cat trivy-report.txt | grep -B 3 Total)
+        report=$(cat trivy-report.txt | grep -B 2 Total)
         echo "::set-output name=trivy_report::$report"
 
   notification-discord:
@@ -102,5 +95,4 @@ jobs:
         args: |
           The project {{ EVENT_PAYLOAD.repository.full_name }} has been builded.
           Image: **${{ needs.build-and-push-image.outputs.tags }}**
-          Scan summary:
-          ${{ needs.scan-image.outputs.trivy_report }}
+          Scan summary: **${{ needs.scan-image.outputs.trivy_report }}**
