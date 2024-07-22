@@ -8,15 +8,18 @@ RUN microdnf update -y && microdnf -y install libxcrypt-compat.x86_64 tzdata git
 RUN cd /atomic && npm install && npm run build
 
 RUN npm remove grunt-jsdoc \
-                grunt-chmod \
-                simple-update-notifier \ 
-                grunt-contrib-jshint \
-		grunt-jsdoc-to-markdown
+		grunt-chmod \
+		simple-update-notifier \
+		grunt-jsonlint \
+		grunt-jsdoc-to-markdown \
+		nomnom \
+		underscore
 
 #                grunt-simple-nyc \
 #                grunt-simple-mocha \
 #                grunt-contrib-compress \
 #                grunt-contrib-watch \
+#                grunt-contrib-jshint \
 #                grunt-jsdoc-to-markdown \
 #                grunt-concurrent \
 #                grunt-contrib-clean \
@@ -53,7 +56,6 @@ RUN cd /atomic && npm install \
 
 RUN npm install \
 	jsonata@1.8.7 \
-	nomnom@1.5.3 \
 	ws@6.2.3 \
 	nodemon@3.1.4 \
 	semver@6.3.1 \
@@ -64,7 +66,6 @@ RUN npm install \
 	./node-red-contrib-oracledb-mod
 #	node-red-node-mysql@1.0.3 \
 #	node-red-contrib-mssql-plus@0.9.0
-
 
 RUN npm audit fix || true
 
@@ -88,7 +89,6 @@ RUN mv ./gitconfig /.gitconfig && cp /.gitconfig ~
 RUN rm -rf ./build  ./packages/node_modules/@node-red/editor-client/src .git
 
 RUN microdnf remove unzip -y #python3 make gcc-c++
-
 
 USER 1001
 ENV TZ="Asia/Taipei"
