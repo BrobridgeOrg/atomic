@@ -10,11 +10,11 @@ RUN cd /atomic && npm install && npm run build
 RUN npm remove grunt-jsdoc \
                 grunt-chmod \
                 simple-update-notifier \ 
+                grunt-contrib-jshint \
 		grunt-jsdoc-to-markdown
 
 #                grunt-simple-nyc \
 #                grunt-simple-mocha \
-#                grunt-contrib-jshint \
 #                grunt-contrib-compress \
 #                grunt-contrib-watch \
 #                grunt-jsdoc-to-markdown \
