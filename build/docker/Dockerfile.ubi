@@ -1,14 +1,37 @@
-FROM registry.access.redhat.com/ubi9/nodejs-16:1-147
+FROM registry.access.redhat.com/ubi9/nodejs-18-minimal:1-117
 WORKDIR /atomic
 COPY . .
 
 USER root
 
-RUN yum update -y && yum -y install libxcrypt-compat.x86_64 tzdata #&& yum -y install build-essential curl  python3 libxml2  #libc6-compat python3 #libaio libnsl libc6-compat
+RUN microdnf update -y && microdnf -y install libxcrypt-compat.x86_64 tzdata git unzip python3 make gcc-c++ # && microdnf remove vim-minimal vim-filesystem -y #&& yum -y install build-essential curl  python3 libxml2  #libc6-compat python3 #libaio libnsl libc6-compat
+RUN cd /atomic && npm install && npm run build
 
-#RUN npm install -g npm@9.8.1
-RUN yum update -y && \
-	yum install -y libaio && \
+RUN npm remove grunt-jsdoc \
+                grunt-chmod \
+                simple-update-notifier \ 
+		grunt-jsdoc-to-markdown
+
+#                grunt-simple-nyc \
+#                grunt-simple-mocha \
+#                grunt-contrib-jshint \
+#                grunt-contrib-compress \
+#                grunt-contrib-watch \
+#                grunt-jsdoc-to-markdown \
+#                grunt-concurrent \
+#                grunt-contrib-clean \
+#                grunt-contrib-concat \
+#                grunt-mkdir \
+#                grunt-npm-command \
+#                grunt-sass \
+#                grunt \
+#                lodash \
+#                mocha \
+#                node-red-node-test-helper \
+#                jsdoc-nr-template \
+
+#RUN yum update -y && \
+RUN	microdnf install -y libaio && \
 	cd /tmp && \
 	#curl -o instantclient-basic.zip https://download.oracle.com/otn_software/linux/instantclient/instantclient-basic-linuxx64.zip -SL && \
 	curl -o instantclient-basic.zip https://download.oracle.com/otn_software/linux/instantclient/2112000/instantclient-basic-linux.x64-21.12.0.0.0dbru.zip -SL && \
@@ -20,23 +43,44 @@ RUN yum update -y && \
 ENV LD_LIBRARY_PATH=/usr/lib/instantclient
 
 ## fix cve and atomic common module
-RUN rm -rf ./atomic-gravity/.git
-RUN npm update && npm install body-parser@1.20.2 express@4.18.2 qs@6.5.3 minimatch@3.0.5 \
-	atomic-mssql@0.0.19 \
-#	node-red-contrib-mssql-plus@0.7.3\ #top 0.9.0
-	node-red-contrib-ldap-auth \
-	atomic-jetstream \
-	atomic-gravity@2.0.16 \
-	atomic-org/lru-cache \
-	node-red-contrib-cron-plus \
-	node-red-node-mysql@1.0.3 \
-	atomic-informix@0.0.9 \
-	./node-red-contrib-mongodb-aleph \
-	./node-red-contrib-kafka-manager \
-	./node-red-contrib-oracledb-mod
-#	node-red-contrib-oracledb-mod@0.6.3 \
-	
+#RUN rm -rf ./atomic-gravity/.git && \
+#	rm -rf package-* && npm update && npm install && npm cache clean --force
 
+#RUN npm install -g npm@10.8.2 && npm update
+RUN cd /atomic && npm install \
+	atomic-mssql@0.0.20 \
+	atomic-jetstream \
+	atomic-gravity \
+	atomic-informix \
+	atomic-org/lru-cache
+
+
+RUN npm install \
+	jsonata@1.8.7 \
+	nomnom@1.5.3 \
+	ws@6.2.3 \
+	nodemon@3.1.4 \
+	semver@6.3.1 \
+	node-red-admin@3.1.2 \
+	node-red-contrib-cron-plus \
+	node-red-contrib-ldap-auth \
+	./node-red-contrib-mongodb-aleph \
+	./node-red-contrib-oracledb-mod
+	#node-red-node-mysql@1.0.3 \
+##	node-red-contrib-mssql-plus@0.9.0
+
+
+#RUN npm install --production \
+#	./node-red-contrib-mongodb-aleph \
+#	./node-red-contrib-oracledb-mod
+
+RUN npm audit fix || true
+
+RUN npm install --production ./node-red-contrib-kafka-manager
+
+RUN npm audit fix || true
+
+RUN rm -rf ./node_modules/protobufjs/cli/node_modules/taffydb
 
 ## fix DeprecationWarning: Invalid 'main' field and other bug
 RUN cd /atomic/ && \
@@ -50,17 +94,18 @@ RUN cd /atomic/ && \
 	#grep -r 'background: #fff' ./* | awk -F':' '{print $1 }' | xargs sed -i 's/background: #fff//g'
 
 
-
-
 RUN mkdir -p /data/atomic
 RUN chmod -R g+rwX /data && chown -R 1001:0 /data
 RUN mv ./gitconfig /.gitconfig && cp /.gitconfig ~
 RUN rm -rf ./build  ./packages/node_modules/@node-red/editor-client/src .git
 
+RUN microdnf remove unzip -y #python3 make gcc-c++
+
 
 USER 1001
 ENV TZ="Asia/Taipei"
 ENV NODE_PATH /data/atomic/node_modules
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false
 #ENV NODE_RED_ENABLE_PROJECTS=true
 ENV ATOMIC_PUBLISH_COMMAND='cd /data/atomic && git add . && git commit -m "updated by atomic" && git push'
 ENTRYPOINT [ "npm", "start", "--cache", "/data/atomic/.npm", "--", "--userDir", "/data/atomic", "/data/atomic/flows.json" ]
