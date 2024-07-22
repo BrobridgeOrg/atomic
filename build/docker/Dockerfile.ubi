@@ -42,10 +42,6 @@ RUN	microdnf install -y libaio && \
 
 ENV LD_LIBRARY_PATH=/usr/lib/instantclient
 
-## fix cve and atomic common module
-#RUN rm -rf ./atomic-gravity/.git && \
-#	rm -rf package-* && npm update && npm install && npm cache clean --force
-
 #RUN npm install -g npm@10.8.2 && npm update
 RUN cd /atomic && npm install \
 	atomic-mssql@0.0.20 \
@@ -66,17 +62,9 @@ RUN npm install \
 	node-red-contrib-ldap-auth \
 	./node-red-contrib-mongodb-aleph \
 	./node-red-contrib-oracledb-mod
-	#node-red-node-mysql@1.0.3 \
-##	node-red-contrib-mssql-plus@0.9.0
+#	node-red-node-mysql@1.0.3 \
+#	node-red-contrib-mssql-plus@0.9.0
 
-
-#RUN npm install --production \
-#	./node-red-contrib-mongodb-aleph \
-#	./node-red-contrib-oracledb-mod
-
-RUN npm audit fix || true
-
-RUN npm install --production ./node-red-contrib-kafka-manager
 
 RUN npm audit fix || true
 
