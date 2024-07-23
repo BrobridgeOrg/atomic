@@ -4,7 +4,17 @@ COPY . .
 
 USER root
 
-RUN microdnf update -y && microdnf -y install libxcrypt-compat.x86_64 tzdata git unzip python3 make gcc-c++ # && microdnf remove vim-minimal vim-filesystem -y #&& yum -y install build-essential curl  python3 libxml2  #libc6-compat python3 #libaio libnsl libc6-compat
+RUN microdnf update -y && \
+	microdnf -y install \
+		libxcrypt-compat.x86_64 \
+		tzdata \
+		git \
+		unzip \
+		python3 \
+		make \
+		gcc-c++
+#&& yum -y install build-essential curl  python3 libxml2  #libc6-compat python3 #libaio libnsl libc6-compat
+
 RUN cd /atomic && npm install && npm run build
 
 RUN npm remove grunt-jsdoc \
@@ -34,7 +44,7 @@ RUN npm remove grunt-jsdoc \
 #                jsdoc-nr-template \
 
 #RUN yum update -y && \
-RUN	microdnf install -y libaio && \
+RUN microdnf install -y libaio && \
 	cd /tmp && \
 	#curl -o instantclient-basic.zip https://download.oracle.com/otn_software/linux/instantclient/instantclient-basic-linuxx64.zip -SL && \
 	curl -o instantclient-basic.zip https://download.oracle.com/otn_software/linux/instantclient/2112000/instantclient-basic-linux.x64-21.12.0.0.0dbru.zip -SL && \
@@ -88,7 +98,21 @@ RUN chmod -R g+rwX /data && chown -R 1001:0 /data
 RUN mv ./gitconfig /.gitconfig && cp /.gitconfig ~
 RUN rm -rf ./build  ./packages/node_modules/@node-red/editor-client/src .git
 
-RUN microdnf remove unzip -y #python3 make gcc-c++
+RUN microdnf remove -y\
+	unzip \
+	tar \
+	kernel-headers \
+	glibc-devel \
+	libxcrypt-devel \
+	gcc-c++ \
+	gcc \
+	python3 \
+	python-unversioned-command \
+	python3-setuptools-wheel \
+	python3-libs \
+	python3-pip-wheel \
+	make \
+	&& microdnf clean all
 
 USER 1001
 ENV TZ="Asia/Taipei"
