@@ -73,8 +73,8 @@ RUN npm install \
 	node-red-contrib-cron-plus \
 	node-red-contrib-ldap-auth \
 	./node-red-contrib-mongodb-aleph \
+	node-red-node-mysql@1.0.3 \
 	./node-red-contrib-oracledb-mod
-#	node-red-node-mysql@1.0.3 \
 #	node-red-contrib-mssql-plus@0.9.0
 
 RUN npm audit fix || true
