@@ -98,7 +98,7 @@ describe('change Node', function() {
     });
 
     describe('#set' , function() {
-        
+
         it('sets the value of the message property', function(done) {
             var flow = [{"id":"changeNode1","type":"change","action":"replace","property":"payload","from":"","to":"changed","reg":false,"name":"changeNode","wires":[["helperNode1"]]},
                         {id:"helperNode1", type:"helper", wires:[]}];
@@ -542,8 +542,80 @@ describe('change Node', function() {
                     changeNode1.receive({payload:"123",topic:"ABC"});
                 });
             });
-        });
 
+            it('sets the value using env property from tab', function(done) {
+                var flow = [
+                    {"id":"tab1","type":"tab","env":[
+                        {"name":"NR_TEST_A", "value":"bar", "type": "str"}
+                    ]},
+                    {"id":"changeNode1","type":"change","z":"tab1",rules:[{"t":"set","p":"payload","pt":"msg","to":"NR_TEST_A","tot":"env"}],"name":"changeNode","wires":[["helperNode1"]]},
+                    {id:"helperNode1", type:"helper", wires:[]}
+                ];
+                helper.load(changeNode, flow, function() {
+                    var changeNode1 = helper.getNode("changeNode1");
+                    var helperNode1 = helper.getNode("helperNode1");
+                    helperNode1.on("input", function(msg) {
+                        try {
+                            msg.payload.should.equal("bar");
+                            done();
+                        } catch(err) {
+                            done(err);
+                        }
+                    });
+                    changeNode1.receive({payload:"123",topic:"ABC"});
+                });
+            });
+
+            it('sets the value using env property from group', function(done) {
+                var flow = [
+                    {"id": "flow", type:"tab"},
+                    {"id":"group1","type":"group","env":[
+                        {"name":"NR_TEST_A", "value":"bar", "type": "str"}
+                    ], z: "flow"},
+                    {"id":"changeNode1","type":"change","g":"group1",rules:[{"t":"set","p":"payload","pt":"msg","to":"NR_TEST_A","tot":"env"}],"name":"changeNode","wires":[["helperNode1"]], z: "flow"},
+                    {id:"helperNode1", type:"helper", wires:[], z: "flow"}
+                ];
+                helper.load(changeNode, flow, function() {
+                    var changeNode1 = helper.getNode("changeNode1");
+                    var helperNode1 = helper.getNode("helperNode1");
+                    helperNode1.on("input", function(msg) {
+                        try {
+                            msg.payload.should.equal("bar");
+                            done();
+                        } catch(err) {
+                            done(err);
+                        }
+                    });
+                    changeNode1.receive({payload:"123",topic:"ABC"});
+                });
+            });
+
+            it('sets the value using env property from nested group', function(done) {
+                var flow = [
+                    {"id": "flow", type:"tab"},
+                    {"id":"group1","type":"group","env":[
+                        {"name":"NR_TEST_A", "value":"bar", "type": "str"}
+                    ], z: "flow"},
+                    {"id":"group2","type":"group","g":"group1","env":[], z: "flow"},
+                    {"id":"changeNode1","type":"change","g":"group2",rules:[{"t":"set","p":"payload","pt":"msg","to":"NR_TEST_A","tot":"env"}],"name":"changeNode","wires":[["helperNode1"]], z: "flow"},
+                    {id:"helperNode1", type:"helper", wires:[], z: "flow"}
+                ];
+                helper.load(changeNode, flow, function() {
+                    var changeNode1 = helper.getNode("changeNode1");
+                    var helperNode1 = helper.getNode("helperNode1");
+                    helperNode1.on("input", function(msg) {
+                        try {
+                            msg.payload.should.equal("bar");
+                            done();
+                        } catch(err) {
+                            done(err);
+                        }
+                    });
+                    changeNode1.receive({payload:"123",topic:"ABC"});
+                });
+            });
+
+        });
 
         it('changes the value using jsonata', function(done) {
             var flow = [{"id":"changeNode1","type":"change",rules:[{"t":"set","p":"payload","to":"$length(payload)","tot":"jsonata"}],"name":"changeNode","wires":[["helperNode1"]]},
@@ -776,7 +848,36 @@ describe('change Node', function() {
             });
         })
 
+        it('deep copies the property if selected', function(done) {
 
+            var flow = [{"id":"changeNode1","type":"change","rules":[{"t":"set","p":"payload","pt":"msg","to":"source","tot":"msg","dc":true}],"name":"changeNode","wires":[["helperNode1"]]},
+            {id:"helperNode1", type:"helper", wires:[]}];
+            helper.load(changeNode, flow, function() {
+                var changeNode1 = helper.getNode("changeNode1");
+                var helperNode1 = helper.getNode("helperNode1");
+                helperNode1.on("input", function(msg) {
+                    try {
+                        // Check payload has been set to a clone of original object
+                        // - the JSON should match
+                        JSON.stringify(msg.payload).should.equal(JSON.stringify(originalObject))
+                        // - but they must be different objects
+                        msg.payload.should.not.equal(originalObject);
+
+                        // Modify nested property of original object
+                        originalObject.a.c = 3;
+                        // Check that modification hasn't happened on cloned prop
+                        msg.payload.a.should.not.have.property('c');
+
+                        done();
+                    } catch(err) {
+                        done(err);
+                    }
+                });
+                var originalObject = { a: { b: 2 } }
+                changeNode1.receive({source:originalObject});
+            });
+
+        })
     });
     describe('#change', function() {
         it('changes the value of the message property', function(done) {
@@ -817,7 +918,7 @@ describe('change Node', function() {
             });
         });
 
-        it('changes the value and type of the message property if a complete match', function(done) {
+        it('changes the value and type of the message property if a complete match - number', function(done) {
             var flow = [{"id":"changeNode1","type":"change",rules:[{ "t": "change", "p": "payload", "pt": "msg", "from": "123", "fromt": "str", "to": "456", "tot": "num" }],"reg":false,"name":"changeNode","wires":[["helperNode1"]]},
                         {id:"helperNode1", type:"helper", wires:[]}];
             helper.load(changeNode, flow, function() {
@@ -834,6 +935,25 @@ describe('change Node', function() {
                     }
                 });
                 changeNode1.receive({payload:"123"});
+            });
+        });
+
+        it('changes the value and type of the message property if a complete match - boolean', function(done) {
+            var flow = [{"id":"changeNode1","type":"change",rules:[{ "t": "change", "p": "payload.a", "pt": "msg", "from": "123", "fromt": "str", "to": "true", "tot": "bool" }, { "t": "change", "p": "payload.b", "pt": "msg", "from": "456", "fromt": "str", "to": "false", "tot": "bool" }],"reg":false,"name":"changeNode","wires":[["helperNode1"]]},
+                        {id:"helperNode1", type:"helper", wires:[]}];
+            helper.load(changeNode, flow, function() {
+                var changeNode1 = helper.getNode("changeNode1");
+                var helperNode1 = helper.getNode("helperNode1");
+                helperNode1.on("input", function(msg) {
+                    try {
+                        msg.payload.a.should.equal(true);
+                        msg.payload.b.should.equal(false);
+                        done();
+                    } catch(err) {
+                        done(err);
+                    }
+                });
+                changeNode1.receive({payload: { a: "123", b: "456" }});
             });
         });
 
@@ -892,20 +1012,28 @@ describe('change Node', function() {
         });
 
         it('changes the value of the message property based on a regex', function(done) {
-            var flow = [{"id":"changeNode1","type":"change","action":"change","property":"payload","from":"\\d+","to":"NUMBER","reg":true,"name":"changeNode","wires":[["helperNode1"]]},
-                        {id:"helperNode1", type:"helper", wires:[]}];
+            const flow = [
+                {"id":"changeNode1","type":"change",rules:[
+                    { "t": "change", "p": "payload.a", "pt": "msg", "from": "\\d+", "fromt": "re", "to": "NUMBER", "tot": "str" },
+                    { "t": "change", "p": "payload.b", "pt": "msg", "from": "on", "fromt": "re", "to": "true", "tot": "bool" },
+                    { "t": "change", "p": "payload.c", "pt": "msg", "from": "off", "fromt": "re", "to": "false", "tot": "bool" }
+                ],"reg":false,"name":"changeNode","wires":[["helperNode1"]]},
+                {id:"helperNode1", type:"helper", wires:[]}
+            ];
             helper.load(changeNode, flow, function() {
                 var changeNode1 = helper.getNode("changeNode1");
                 var helperNode1 = helper.getNode("helperNode1");
                 helperNode1.on("input", function(msg) {
                     try {
-                        msg.payload.should.equal("Replace all numbers NUMBER and NUMBER");
+                        msg.payload.a.should.equal("Replace all numbers NUMBER and NUMBER");
+                        msg.payload.b.should.equal(true)
+                        msg.payload.c.should.equal(false)
                         done();
                     } catch(err) {
                         done(err);
                     }
                 });
-                changeNode1.receive({payload:"Replace all numbers 12 and 14"});
+                changeNode1.receive({payload:{ a: "Replace all numbers 12 and 14", b: 'on', c: 'off' } });
             });
         });
 
@@ -1616,6 +1744,24 @@ describe('change Node', function() {
                     }
                 });
                 changeNode1.receive({topic:{foo:{bar:1}}, payload:"String"});
+            });
+        });
+        it('moves the value of a message property object to itself', function(done) {
+            var flow = [{"id":"changeNode1","type":"change","rules":[{"t":"move","p":"payload","pt":"msg","to":"payload","tot":"msg"}],"name":"changeNode","wires":[["helperNode1"]]},
+                        {id:"helperNode1", type:"helper", wires:[]}];
+            helper.load(changeNode, flow, function() {
+                var changeNode1 = helper.getNode("changeNode1");
+                var helperNode1 = helper.getNode("helperNode1");
+                helperNode1.on("input", function(msg) {
+                    try {
+                        msg.should.have.property('payload');
+                        msg.payload.should.equal("bar");
+                        done();
+                    } catch(err) {
+                        done(err);
+                    }
+                });
+                changeNode1.receive({payload:"bar"});
             });
         });
         it('moves the value of a message property object to a sub-property', function(done) {

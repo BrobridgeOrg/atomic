@@ -19,7 +19,7 @@ var sinon = require('sinon');
 var NR_TEST_UTILS = require("nr-test-utils");
 var RedNode = NR_TEST_UTILS.require("@node-red/runtime/lib/nodes/Node");
 var Log = NR_TEST_UTILS.require("@node-red/util").log;
-var hooks = NR_TEST_UTILS.require("@node-red/runtime/lib/hooks");
+var hooks = NR_TEST_UTILS.require("@node-red/util/lib/hooks");
 var flows = NR_TEST_UTILS.require("@node-red/runtime/lib/flows");
 
 describe('Node', function() {
@@ -151,7 +151,7 @@ describe('Node', function() {
 
         it('handles thrown errors', function(done) {
             var n = new RedNode({id:'123',type:'abc'});
-            sinon.stub(n,"error",function(err,msg) {});
+            sinon.stub(n,"error").callsFake(function(err,msg) {});
             var message = {payload:"hello world"};
             n.on('input',function(msg) {
                 throw new Error("test error");
@@ -178,6 +178,35 @@ describe('Node', function() {
 
             var message = {payload:"hello world"};
             n.on('input',function(msg, nodeSend, nodeDone) {
+                nodeDone();
+            });
+            n.receive(message);
+        });
+
+
+        it('calls parent flow handleComplete when multiple callbacks provided', function(done) {
+            var n = new RedNode({id:'123',type:'abc', _flow: {
+                handleComplete: function(node,msg) {
+                    try {
+                        doneCount.should.equal(2)
+                        msg.should.deepEqual(message);
+                        done();
+                    } catch(err) {
+                        done(err);
+                    }
+                }
+            }});
+
+            var message = {payload:"hello world"};
+            let doneCount = 0
+            n.on('input',function(msg, nodeSend, nodeDone) {
+                doneCount++
+                nodeDone();
+            });
+            // Include a callback without explicit done signature
+            n.on('input',function(msg) { });
+            n.on('input',function(msg, nodeSend, nodeDone) {
+                doneCount++
                 nodeDone();
             });
             n.receive(message);
@@ -271,7 +300,7 @@ describe('Node', function() {
         });
         it('logs error if callback provides error', function(done) {
             var n = new RedNode({id:'123',type:'abc'});
-            sinon.stub(n,"error",function(err,msg) {});
+            sinon.stub(n,"error").callsFake(function(err,msg) {});
 
             var message = {payload:"hello world"};
             n.on('input',function(msg, nodeSend, nodeDone) {
@@ -723,7 +752,7 @@ describe('Node', function() {
         it('produces a metric message', function(done) {
             var n = new RedNode({id:'123',type:'abc'});
             var loginfo = {};
-            sinon.stub(Log, 'log', function(msg) {
+            sinon.stub(Log, 'log').callsFake(function(msg) {
                 loginfo = msg;
             });
             var msg = {payload:"foo", _msgid:"987654321"};
@@ -739,7 +768,7 @@ describe('Node', function() {
         it('returns metric value if eventname undefined', function(done) {
             var n = new RedNode({id:'123',type:'abc'});
             var loginfo = {};
-            sinon.stub(Log, 'log', function(msg) {
+            sinon.stub(Log, 'log').callsFake(function(msg) {
                 loginfo = msg;
             });
             var msg = {payload:"foo", _msgid:"987654321"};
@@ -751,7 +780,7 @@ describe('Node', function() {
         it('returns not defined if eventname defined', function(done) {
             var n = new RedNode({id:'123',type:'abc'});
             var loginfo = {};
-            sinon.stub(Log, 'log', function(msg) {
+            sinon.stub(Log, 'log').callsFake(function(msg) {
                 loginfo = msg;
             });
             var msg = {payload:"foo", _msgid:"987654321"};

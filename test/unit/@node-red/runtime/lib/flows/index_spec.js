@@ -51,10 +51,10 @@ describe('flows/index', function() {
 
 
     before(function() {
-        getType = sinon.stub(typeRegistry,"get",function(type) {
+        getType = sinon.stub(typeRegistry,"get").callsFake(function(type) {
             return type.indexOf('missing') === -1;
         });
-        checkFlowDependencies = sinon.stub(typeRegistry, "checkFlowDependencies", async function(flow) {
+        checkFlowDependencies = sinon.stub(typeRegistry, "checkFlowDependencies").callsFake(async function(flow) {
             if (flow[0].id === "node-with-missing-modules") {
                 throw new Error("Missing module");
             }
@@ -69,20 +69,20 @@ describe('flows/index', function() {
 
     beforeEach(function() {
         eventsOn = sinon.spy(events,"on");
-        credentialsClean = sinon.stub(credentials,"clean",function(conf) {
+        credentialsClean = sinon.stub(credentials,"clean").callsFake(function(conf) {
             conf.forEach(function(n) {
                 delete n.credentials;
             });
             return Promise.resolve();
         });
-        credentialsLoad = sinon.stub(credentials,"load",function(creds) {
+        credentialsLoad = sinon.stub(credentials,"load").callsFake(function(creds) {
             if (creds && creds.hasOwnProperty("$") && creds['$'] === "fail") {
                 return Promise.reject("creds error");
             }
             return Promise.resolve();
         });
-        credentialsAdd = sinon.stub(credentials,"add", async function(id, conf){})
-        flowCreate = sinon.stub(Flow,"create",function(parent, global, flow) {
+        credentialsAdd = sinon.stub(credentials,"add").callsFake(async function(id, conf){})
+        flowCreate = sinon.stub(Flow,"create").callsFake(function(parent, global, flow) {
             var id;
             if (typeof flow === 'undefined') {
                 flow = global;
@@ -93,7 +93,7 @@ describe('flows/index', function() {
             flowCreate.flows[id] = {
                 flow: flow,
                 global: global,
-                start: sinon.spy(),
+                start: sinon.spy(async() => {}),
                 update: sinon.spy(),
                 stop: sinon.spy(),
                 getActiveNodes: function() {
@@ -221,13 +221,18 @@ describe('flows/index', function() {
                 return Promise.resolve({flows:originalConfig});
             }
             events.once('flows:started',function() {
-                flows.setFlows(newConfig,"nodes").then(function() {
-                    flows.getFlows().flows.should.eql(newConfig);
-                    flowCreate.flows['t1'].update.called.should.be.true();
-                    flowCreate.flows['t2'].start.called.should.be.true();
-                    flowCreate.flows['_GLOBAL_'].update.called.should.be.true();
-                    done();
+                events.once('flows:started', function() {
+                    try {
+                        flows.getFlows().flows.should.eql(newConfig);
+                        flowCreate.flows['t1'].update.called.should.be.true();
+                        flowCreate.flows['t2'].start.called.should.be.true();
+                        flowCreate.flows['_GLOBAL_'].update.called.should.be.true();
+                        done();
+                    } catch(err) {
+                        done(err)
+                    }
                 })
+                flows.setFlows(newConfig,"nodes")
             });
 
             flows.init({log:mockLog, settings:{},storage:storage});
@@ -250,13 +255,14 @@ describe('flows/index', function() {
             }
 
             events.once('flows:started',function() {
-                flows.setFlows(newConfig,"nodes").then(function() {
+                events.once('flows:started',function() {
                     flows.getFlows().flows.should.eql(newConfig);
                     flowCreate.flows['t1'].update.called.should.be.true();
                     flowCreate.flows['t2'].start.called.should.be.true();
                     flowCreate.flows['_GLOBAL_'].update.called.should.be.true();
                     flows.stopFlows().then(done);
                 })
+                flows.setFlows(newConfig,"nodes")
             });
 
             flows.init({log:mockLog, settings:{},storage:storage});
@@ -396,12 +402,13 @@ describe('flows/index', function() {
                 try {
                     flowCreate.called.should.be.false();
                     receivedEvent.should.have.property('id','runtime-state');
-                    receivedEvent.should.have.property('payload',
-                       { error: 'missing-modules',
-                         type: 'warning',
-                         text: 'notification.warnings.missing-modules',
-                         modules: [] }
-                     );
+                    receivedEvent.should.have.property('payload', {
+                        state: 'stop',
+                        error: 'missing-modules',
+                        type: 'warning',
+                        text: 'notification.warnings.missing-modules',
+                        modules: []
+                     });
 
                     done();
                 }catch(err) {
@@ -551,7 +558,7 @@ describe('flows/index', function() {
     describe('#checkTypeInUse', function() {
 
         before(function() {
-            sinon.stub(typeRegistry,"getNodeInfo",function(id) {
+            sinon.stub(typeRegistry,"getNodeInfo").callsFake(function(id) {
                 if (id === 'unused-module') {
                     return {types:['one','two','three']}
                 } else {

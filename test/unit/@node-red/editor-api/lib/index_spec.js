@@ -31,18 +31,18 @@ var apiAdmin = NR_TEST_UTILS.require("@node-red/editor-api/lib/admin");
 
 describe("api/index", function() {
     var beforeEach = function() {
-        sinon.stub(apiAuth,"init",function(){});
-        sinon.stub(apiEditor,"init",function(){
+        sinon.stub(apiAuth,"init").callsFake(function(){});
+        sinon.stub(apiEditor,"init").callsFake(function(){
             var app = express();
             app.get("/editor",function(req,res) { res.status(200).end(); });
             return app;
         });
-        sinon.stub(apiAdmin,"init",function(){
+        sinon.stub(apiAdmin,"init").callsFake(function(){
             var app = express();
             app.get("/admin",function(req,res) { res.status(200).end(); });
             return app;
         });
-        sinon.stub(apiAuth,"login",function(req,res){
+        sinon.stub(apiAuth,"login").callsFake(function(req,res){
             res.status(200).end();
         });
     };
@@ -61,7 +61,7 @@ describe("api/index", function() {
         should.not.exist(api.httpAdmin);
         done();
     });
-    describe('initalises admin api without adminAuth', function(done) {
+    describe('initalises admin api without adminAuth', function() {
         before(function() {
             beforeEach();
             api.init({},{},{},{});
@@ -78,7 +78,7 @@ describe("api/index", function() {
         })
     });
 
-    describe('initalises admin api without editor', function(done) {
+    describe('initalises admin api without editor', function() {
         before(function() {
             beforeEach();
             api.init({ disableEditor: true },{},{},{});
@@ -95,7 +95,7 @@ describe("api/index", function() {
         })
     });
 
-    describe('initialises api with admin middleware', function(done) {
+    describe('initialises api with admin middleware', function() {
         it('ignores non-function values',function(done) {
             api.init({ httpAdminRoot: true, httpAdminMiddleware: undefined },{},{},{});
             const middlewareFound = api.httpAdmin._router.stack.filter((layer) => layer.name === 'testMiddleware')
@@ -112,10 +112,10 @@ describe("api/index", function() {
         });
     });
 
-    describe('initialises api with authentication enabled', function(done) {
+    describe('initialises api with authentication enabled', function() {
 
         it('enables an oauth/openID based authentication mechanism',function(done) {
-            const stub = sinon.stub(apiAuth, 'genericStrategy', function(){});
+            const stub = sinon.stub(apiAuth, 'genericStrategy').callsFake(function(){});
             const adminAuth = { type: 'strategy', strategy: {} }
             api.init({ httpAdminRoot: true, adminAuth },{},{},{});
             should(stub.called).be.ok();
@@ -135,7 +135,7 @@ describe("api/index", function() {
 
     });
 
-    describe('initialises api with custom cors config', function (done) {
+    describe('initialises api with custom cors config', function () {
         const httpAdminCors = {
             origin: "*",
             methods: "GET,PUT,POST,DELETE"
@@ -156,10 +156,10 @@ describe("api/index", function() {
         })
     });
 
-    describe('editor start', function (done) {
+    describe('editor start', function () {
 
         it('cannot be started when editor is disabled', function (done) {
-            const stub = sinon.stub(apiEditor, 'start', function () {
+            const stub = sinon.stub(apiEditor, 'start').callsFake(function () {
                 return Promise.resolve(true);
             });
             api.init({ httpAdminRoot: true, disableEditor: true }, {}, {}, {});
