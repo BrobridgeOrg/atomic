@@ -37,8 +37,8 @@ describe("red/nodes/registry/plugins",function() {
             }
         }
         events.on("registry:plugin-added",handleEvent);
-        sinon.stub(registry,"getModule", moduleId => modules[moduleId]);
-        sinon.stub(registry,"getModuleList", () => modules)
+        sinon.stub(registry,"getModule").callsFake(moduleId => modules[moduleId]);
+        sinon.stub(registry,"getModuleList").callsFake(() => modules)
     });
     afterEach(function() {
         events.removeListener("registry:plugin-added",handleEvent);
@@ -115,41 +115,55 @@ test-module-config`)
 
             let pluginList = plugins.getPluginList();
             JSON.stringify(pluginList).should.eql(JSON.stringify(
-                [
-                    {
-                        "id": "test-module/test-set",
-                        "enabled": true,
-                        "local": false,
-                        "user": false,
-                        "plugins": [
-                            {
-                                "type": "foo",
-                                "id": "a-plugin",
-                                "module": "test-module"
-                            },
-                            {
-                                "type": "bar",
-                                "id": "a-plugin2",
-                                "module": "test-module"
-                            },
-                            {
-                                "type": "foo",
-                                "id": "a-plugin3",
-                                "module": "test-module"
-                            }
-                        ]
-                    },
-                    {
-                        "id": "test-module/test-disabled-set",
-                        "enabled": false,
-                        "local": false,
-                        "user": false,
-                        "plugins": []
-                    }
-                ]
+                [{"id":"test-module/test-set","enabled":true,"local":false,"user":false,"plugins":[{"id":"a-plugin","type":"foo","module":"test-module"},{"id":"a-plugin2","type":"bar","module":"test-module"},{"id":"a-plugin3","type":"foo","module":"test-module"}]},{"id":"test-module/test-disabled-set","enabled":false,"local":false,"user":false,"plugins":[]}]
             ))
         })
     })
+    describe("exportPluginSettings", function() {
+        it("exports plugin settings - default false", function() {
+            plugins.init({ "a-plugin": { a: 123, b:234, c: 345} });
+            plugins.registerPlugin("test-module/test-set","a-plugin",{
+                settings: {
+                    a: { exportable: true },
+                    b: {exportable: false },
+                    d: { exportable: true, value: 456}
 
+                }
+            });
+            var exportedSet = {};
+            plugins.exportPluginSettings(exportedSet);
+            exportedSet.should.have.property("a-plugin");
+            // a is exportable
+            exportedSet["a-plugin"].should.have.property("a",123);
+            // b is explicitly not exportable
+            exportedSet["a-plugin"].should.not.have.property("b");
+            // c isn't listed and default false
+            exportedSet["a-plugin"].should.not.have.property("c");
+            // d has a default value
+            exportedSet["a-plugin"].should.have.property("d",456);
+        })
+        it("exports plugin settings - default true", function() {
+            plugins.init({ "a-plugin": { a: 123, b:234, c: 345} });
+            plugins.registerPlugin("test-module/test-set","a-plugin",{
+                settings: {
+                    '*': { exportable: true },
+                    a: { exportable: true },
+                    b: {exportable: false },
+                    d: { exportable: true, value: 456}
 
+                }
+            });
+            var exportedSet = {};
+            plugins.exportPluginSettings(exportedSet);
+            exportedSet.should.have.property("a-plugin");
+            // a is exportable
+            exportedSet["a-plugin"].should.have.property("a",123);
+            // b is explicitly not exportable
+            exportedSet["a-plugin"].should.not.have.property("b");
+            // c isn't listed, but default true
+            exportedSet["a-plugin"].should.have.property("c");
+            // d has a default value
+            exportedSet["a-plugin"].should.have.property("d",456);
+        })
+    });
 });

@@ -29,7 +29,7 @@ var theme = NR_TEST_UTILS.require("@node-red/editor-api/lib/editor/theme");
 
 describe("api/editor/settings", function() {
     before(function() {
-        sinon.stub(theme,"settings",function() { return { existing: 123, test: 456 };});
+        sinon.stub(theme,"settings").callsFake(function() { return { existing: 123, test: 456 };});
         app = express();
         app.use(bodyParser.json());
         app.get("/settings/user",function(req,res,next) {req.user = "fred"; next()}, info.userSettings);
@@ -41,7 +41,7 @@ describe("api/editor/settings", function() {
     });
 
     it('returns the user settings', function(done) {
-        info.init({
+        info.init({}, {
             settings: {
                 getUserSettings: function(opts) {
                     if (opts.user !== "fred") {
@@ -67,7 +67,7 @@ describe("api/editor/settings", function() {
     });
     it('updates the user settings', function(done) {
         var update;
-        info.init({
+        info.init({}, {
             settings: {
                 updateUserSettings: function(opts) {
                     if (opts.user !== "fred") {

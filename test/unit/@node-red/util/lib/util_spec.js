@@ -379,14 +379,34 @@ describe("@node-red/util/util", function() {
             result = util.evaluateNodeProperty('','bool');
             result.should.be.false();
         });
-        it('returns date',function() {
+        it('returns date - default format',function() {
             var result = util.evaluateNodeProperty('','date');
             (Date.now() - result).should.be.approximately(0,50);
         });
+
+        it('returns date - iso format',function() {
+            var result = util.evaluateNodeProperty('iso','date');
+            // 2023-12-04T16:51:04.429Z
+            /^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d+Z$/.test(result).should.be.true()
+        });
+
         it('returns bin', function () {
             var result = util.evaluateNodeProperty('[1, 2]','bin');
             result[0].should.eql(1);
             result[1].should.eql(2);
+        });
+        it('throws an error if buffer data is not array or string', function (done) {
+            try {
+                var result = util.evaluateNodeProperty('12','bin');
+                done("should throw an error");
+            } catch (err) {
+                if (err.code === "INVALID_BUFFER_DATA") {
+                    done();
+                }
+                else {
+                    done("should throw an error");
+                }
+            }
         });
         it('returns msg property',function() {
             var result = util.evaluateNodeProperty('foo.bar','msg',{},{foo:{bar:"123"}});
@@ -428,9 +448,16 @@ describe("@node-red/util/util", function() {
             },{});
             result.should.eql("123");
         });
-        it('returns jsonata result', function () {
-            var result = util.evaluateNodeProperty('$abs(-1)','jsonata',{},{});
-            result.should.eql(1);
+        it('returns jsonata result', function (done) {
+            util.evaluateNodeProperty('$abs(-1)','jsonata',{},{}, (err, result) => {
+                try {
+                    result.should.eql(1);
+                    done()
+                } catch (error) {
+                    done(error)
+                }
+
+            });
         });
         it('returns null', function() {
             var result = util.evaluateNodeProperty(null,'null');
@@ -588,51 +615,105 @@ describe("@node-red/util/util", function() {
           });
       });
       describe('evaluateJSONataExpression', function() {
-          it('evaluates an expression', function() {
+          it('evaluates an expression', function(done) {
               var expr = util.prepareJSONataExpression('payload',{});
-              var result = util.evaluateJSONataExpression(expr,{payload:"hello"});
-              result.should.eql("hello");
+              util.evaluateJSONataExpression(expr,{payload:"hello"}, (err, result) => {
+                try {
+                    result.should.eql("hello");
+                    done()
+                } catch (error) {
+                    done(error)
+                }
+              });
           });
           it('evaluates a legacyMode expression', function() {
               var expr = util.prepareJSONataExpression('msg.payload',{});
-              var result = util.evaluateJSONataExpression(expr,{payload:"hello"});
-              result.should.eql("hello");
+              util.evaluateJSONataExpression(expr,{payload:"hello"}, (err, result) => {
+                try {
+                    result.should.eql("hello");
+                    done()
+                } catch (error) {
+                    done(error)
+                }
+              });
           });
           it('accesses flow context from an expression', function() {
               var expr = util.prepareJSONataExpression('$flowContext("foo")',{context:function() { return {flow:{get: function(key) { return {'foo':'bar'}[key]}}}}});
-              var result = util.evaluateJSONataExpression(expr,{payload:"hello"});
-              result.should.eql("bar");
+              util.evaluateJSONataExpression(expr,{payload:"hello"}, (err, result) => {
+                try {
+                    result.should.eql("bar");
+                    done()
+                } catch (error) {
+                    done(error)
+                }
+              });
           });
           it('accesses undefined environment variable from an expression', function() {
               var expr = util.prepareJSONataExpression('$env("UTIL_ENV")',{});
-              var result = util.evaluateJSONataExpression(expr,{});
-              result.should.eql('');
-          });
+              util.evaluateJSONataExpression(expr,{}, (err, result) => {
+                try {
+                    result.should.eql("");
+                    done()
+                } catch (error) {
+                    done(error)
+                }
+              });
+            });
           it('accesses environment variable from an expression', function() {
               process.env.UTIL_ENV = 'foo';
               var expr = util.prepareJSONataExpression('$env("UTIL_ENV")',{});
-              var result = util.evaluateJSONataExpression(expr,{});
-              result.should.eql('foo');
-          });
+              util.evaluateJSONataExpression(expr,{}, (err, result) => {
+                try {
+                    result.should.eql("foo");
+                    done()
+                } catch (error) {
+                    done(error)
+                }
+              });
+            });
           it('accesses moment from an expression', function() {
               var expr = util.prepareJSONataExpression('$moment("2020-05-27", "YYYY-MM-DD").add(7, "days").add(1, "months").format("YYYY-MM-DD")',{});
-              var result = util.evaluateJSONataExpression(expr,{});
-              result.should.eql('2020-07-03');
+              util.evaluateJSONataExpression(expr,{}, (err, result) => {
+                try {
+                    result.should.eql("2020-07-03");
+                    done()
+                } catch (error) {
+                    done(error)
+                }
+              });
           });
           it('accesses moment-timezone from an expression', function() {
               var expr = util.prepareJSONataExpression('$moment("2013-11-18 11:55Z").tz("Asia/Taipei").format()',{});
-              var result = util.evaluateJSONataExpression(expr,{});
-              result.should.eql('2013-11-18T19:55:00+08:00');
+              util.evaluateJSONataExpression(expr,{}, (err, result) => {
+                try {
+                    result.should.eql("2013-11-18T19:55:00+08:00");
+                    done()
+                } catch (error) {
+                    done(error)
+                }
+              });
           });
           it('handles non-existant flow context variable', function() {
               var expr = util.prepareJSONataExpression('$flowContext("nonExistant")',{context:function() { return {flow:{get: function(key) { return {'foo':'bar'}[key]}}}}});
-              var result = util.evaluateJSONataExpression(expr,{payload:"hello"});
-              should.not.exist(result);
-          });
+              util.evaluateJSONataExpression(expr,{payload:"hello"}, (err, result) => {
+                try {
+                    should.not.exist(result);
+                    done()
+                } catch (error) {
+                    done(error)
+                }
+              });
+            });
           it('handles non-existant global context variable', function() {
               var expr = util.prepareJSONataExpression('$globalContext("nonExistant")',{context:function() { return {global:{get: function(key) { return {'foo':'bar'}[key]}}}}});
-              var result = util.evaluateJSONataExpression(expr,{payload:"hello"});
-              should.not.exist(result);
+              util.evaluateJSONataExpression(expr,{payload:"hello"}, (err, result) => {
+                try {
+                    should.not.exist(result);
+                    done()
+                } catch (error) {
+                    done(error)
+                }
+              });
           });
           it('handles async flow context access', function(done) {
               var expr = util.prepareJSONataExpression('$flowContext("foo")',{context:function() { return {flow:{get: function(key,store,callback) { setTimeout(()=>{callback(null,{'foo':'bar'}[key])},10)}}}}});
@@ -768,6 +849,36 @@ describe("@node-red/util/util", function() {
             result.format.should.eql("string[10]");
             result.msg.should.eql('123456...');
         });
+
+        it('encodes Map', function() {
+            const m = new Map();
+            m.set("a",1);
+            m.set("b",2);
+            var msg = {msg:m};
+            var result = util.encodeObject(msg);
+            result.format.should.eql("map");
+            var resultJson = JSON.parse(result.msg);
+            resultJson.should.have.property("__enc__",true);
+            resultJson.should.have.property("type","map");
+            resultJson.should.have.property("data",{"a":1,"b":2});
+            resultJson.should.have.property("length",2)
+        });
+
+        it('encodes Set', function() {
+            const m = new Set();
+            m.add("a");
+            m.add("b");
+            var msg = {msg:m};
+            var result = util.encodeObject(msg);
+            result.format.should.eql("set[2]");
+            var resultJson = JSON.parse(result.msg);
+            resultJson.should.have.property("__enc__",true);
+            resultJson.should.have.property("type","set");
+            resultJson.should.have.property("data",["a","b"]);
+            resultJson.should.have.property("length",2)
+        });
+
+
         describe('encode object', function() {
             it('object', function() {
                 var msg = { msg:{"foo":"bar"} };
@@ -800,7 +911,52 @@ describe("@node-red/util/util", function() {
                 resultJson.b.should.have.property("__enc__", true);
                 resultJson.b.should.have.property("type", "undefined");
             });
-
+            it('object with no prototype builtins', function() {
+                const payload = new Object(null);
+                payload.c = 3;
+                var msg = { msg:{b:payload} };
+                var result = util.encodeObject(msg);
+                result.format.should.eql("Object");
+                var resultJson = JSON.parse(result.msg);
+                resultJson.should.have.property("b");
+                resultJson.b.should.have.property("c", 3);
+            });
+            it('object with overriden hasOwnProperty', function() {
+                var msg = { msg:{b:{hasOwnProperty:null}} };
+                var result = util.encodeObject(msg);
+                result.format.should.eql("Object");
+                var resultJson = JSON.parse(result.msg);
+                resultJson.should.have.property("b");
+                resultJson.b.should.have.property("hasOwnProperty");
+            });
+            it('object with Map property', function() {
+                const m = new Map();
+                m.set("a",1);
+                m.set("b",2);
+                var msg = {msg:{"aMap":m}};
+                var result = util.encodeObject(msg);
+                result.format.should.eql("Object");
+                var resultJson = JSON.parse(result.msg);
+                resultJson.should.have.property("aMap");
+                resultJson.aMap.should.have.property("__enc__",true);
+                resultJson.aMap.should.have.property("type","map");
+                resultJson.aMap.should.have.property("data",{"a":1,"b":2});
+                resultJson.aMap.should.have.property("length",2)
+            });
+            it('object with Set property', function() {
+                const m = new Set();
+                m.add("a");
+                m.add("b");
+                var msg = {msg:{"aSet":m}};
+                var result = util.encodeObject(msg);
+                result.format.should.eql("Object");
+                var resultJson = JSON.parse(result.msg);
+                resultJson.should.have.property("aSet");
+                resultJson.aSet.should.have.property("__enc__",true);
+                resultJson.aSet.should.have.property("type","set");
+                resultJson.aSet.should.have.property("data",["a","b"]);
+                resultJson.aSet.should.have.property("length",2)
+            });
             it('constructor of IncomingMessage', function() {
                 function IncomingMessage(){};
                 var msg = { msg:new IncomingMessage() };
