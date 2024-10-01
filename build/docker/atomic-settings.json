@@ -1,0 +1,62 @@
+{
+    "editorTheme": {
+        "page": {
+            "title": "Brobridge Atomic",
+            "favicon": "/atomic/atomic-logo.png"
+        },
+        "header": {
+            "title": "ATOMIC",
+            "image": "/atomic/atomic-logo.png"
+        },
+        "login": {
+            "image": "/atomic/atomic-logo.png"
+        },
+        "menu": {
+            "menu-item-help": false,
+            "menu-item-node-red-version": false
+        },
+        "theme": "atomic",
+        "tours": false,
+        "palette": {
+            "theme": [ 
+                { "category": "subflows", "type": ".*", "color": "#ddaa99" },
+                { "category": "common", "type": "inject", "color": "#00d9ff" },
+                { "category": "common", "type": "debug", "color": "#00b86e" },
+                { "category": "common", "type": "complete", "color": "#79d45d" },
+                { "category": "common", "type": "catch", "color": "#de234f" },
+                { "category": "common", "type": "status", "color": "#94c1d0" },
+                { "category": "common", "type": "link.*", "color": "#666666" },
+                { "category": "common", "type": "comment", "color": "#212629" },
+                { "category": "function", "type": "function", "color": "#8700e8" },
+                { "category": "function", "type": "switch", "color": "#513b82" },
+                { "category": "function", "type": "change", "color": "#513b82" },
+                { "category": "function", "type": "range", "color": "#513b82" },
+                { "category": "function", "type": "template", "color": "#6e5941" },
+                { "category": "function", "type": "delay", "color": "#31497a" },
+                { "category": "function", "type": "trigger", "color": "#31497a" },
+                { "category": "function", "type": "exec", "color": "#800b1d" },
+                { "category": "network", "type": "mqtt.*", "color": "#8a1e8a" },
+                { "category": "network", "type": "http in", "color": "#2b8cc4" },
+                { "category": "network", "type": "http response", "color": "#2b8cc4" },
+                { "category": "network", "type": "http request", "color": "#2bc4c1" },
+                { "category": "network", "type": "websocket.*", "color": "#22a176" },
+                { "category": "network", "type": "tcp in", "color": "#79808c" },
+                { "category": "network", "type": "tcp out", "color": "#79808c" },
+                { "category": "network", "type": "tcp request", "color": "#49738a" },
+                { "category": "network", "type": "udp.*", "color": "#79808c" },
+                { "category": "sequence", "type": "split", "color": "#758200" },
+                { "category": "sequence", "type": "join", "color": "#758200" },
+                { "category": "sequence", "type": "sort", "color": "#758200" },
+                { "category": "sequence", "type": "batch", "color": "#758200" },
+                { "category": "parser", "type": "csv", "color": "#b59a4a" },
+                { "category": "parser", "type": "html", "color": "#b59a4a" },
+                { "category": "parser", "type": "json", "color": "#b59a4a" },
+                { "category": "parser", "type": "xml", "color": "#b59a4a" },
+                { "category": "parser", "type": "yaml", "color": "#b59a4a" },
+                { "category": "storage", "type": "file", "color": "#7d7d5c" },
+                { "category": "storage", "type": "file in", "color": "#7d7d5c" },
+                { "category": "storage", "type": "watch", "color": "#7d7d5c" }
+            ]
+        }
+    }
+}
