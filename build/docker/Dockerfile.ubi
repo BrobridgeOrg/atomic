@@ -69,7 +69,11 @@ RUN cd /atomic && npm install \
 # Install theme
 RUN npm install @brobridge/atomic-theme
 
+
+
 RUN npm install \
+	dompurify@2.5.4 \
+        nodemon@3.0.1 \
 	node-red-admin@3.1.2 \
 	node-red-contrib-cron-plus \
 	node-red-contrib-ldap-auth \
