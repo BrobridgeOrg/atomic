@@ -89,6 +89,7 @@ RUN rm -rf ./node_modules/protobufjs/cli/node_modules/taffydb
 
 ## fix DeprecationWarning: Invalid 'main' field and other bug
 RUN cd /atomic/ && \
+        cp build/docker/settings.js /atomic/packages/node_modules/node-red/settings.js && \
 	cp build/docker/atomic-settings.json /atomic/atomic-settings.json && \
 	cp build/docker/atomic-logo.png /atomic/atomic-logo.png && \
 	sed -i 's/main/_main/g' packages/node_modules/@node-red/editor-client/package.json
