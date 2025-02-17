@@ -27,4 +27,4 @@ docs
 .vscode
 .nyc_output
 sync.ffs_db
-!build/docker/**
+package-lock.json
