@@ -26,9 +26,10 @@ RUN npm remove grunt-jsdoc \
 		grunt-jsonlint \
 		grunt-jsdoc-to-markdown \
 		nomnom \
+		grunt-simple-nyc \
+		dompurify \
 		underscore
 
-#                grunt-simple-nyc \
 #                grunt-simple-mocha \
 #                grunt-contrib-compress \
 #                grunt-contrib-watch \
@@ -69,10 +70,8 @@ RUN cd /atomic && npm install \
 # Install theme
 RUN npm install @brobridge/atomic-theme
 
-
-
 RUN npm install \
-	dompurify@2.5.4 \
+	mermaid@11.4.1 \
         nodemon@3.0.1 \
 	node-red-admin@3.1.2 \
 	node-red-contrib-cron-plus \
