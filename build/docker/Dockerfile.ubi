@@ -28,24 +28,23 @@ RUN npm remove grunt-jsdoc \
 		nomnom \
 		grunt-simple-nyc \
 		dompurify \
-		underscore
-
-#                grunt-simple-mocha \
-#                grunt-contrib-compress \
-#                grunt-contrib-watch \
-#                grunt-contrib-jshint \
-#                grunt-jsdoc-to-markdown \
-#                grunt-concurrent \
-#                grunt-contrib-clean \
-#                grunt-contrib-concat \
-#                grunt-mkdir \
-#                grunt-npm-command \
-#                grunt-sass \
-#                grunt \
-#                lodash \
-#                mocha \
-#                node-red-node-test-helper \
-#                jsdoc-nr-template \
+                grunt-simple-mocha \
+                grunt-contrib-compress \
+                grunt-contrib-watch \
+                grunt-contrib-jshint \
+                grunt-jsdoc-to-markdown \
+                grunt-concurrent \
+                grunt-contrib-clean \
+                grunt-contrib-concat \
+                grunt-mkdir \
+                grunt-npm-command \
+                grunt-sass \
+                grunt \
+                mocha \
+                node-red-node-test-helper \
+                jsdoc-nr-template
+#               lodash \
+#		underscore
 
 #RUN yum update -y && \
 RUN microdnf install -y libaio && \
