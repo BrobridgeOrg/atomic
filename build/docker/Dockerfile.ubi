@@ -63,7 +63,7 @@ RUN cd /atomic && npm install \
 	atomic-mssql@0.0.20 \
 	atomic-jetstream \
 	atomic-gravity \
-	atomic-informix \
+	brobridgeorg/atomic-informix#main \
 	atomic-org/lru-cache
 
 # Install theme
